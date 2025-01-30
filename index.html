@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>เกมส์จับคู่คำศัพท์ สำหรับเด็ก</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@400;700&display=swap');
+    body {
+      font-family: 'Prompt', Arial, sans-serif;
+      background-image: url('https://lh3.googleusercontent.com/d/1cRjmewsu6G3stxXSqMZO7l1-b1Rhs4Bt');
+      height: 80%;
+      background-size: cover;
+      background-position: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      text-align: center;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0.1, 0.1, 0.1, 0.5);
+      max-width: 80%;
+      width: 80%;
+      height: 80%;
+      min-width: 300px;
+      position: relative;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .column {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .card {
+      padding: 15px;
+      background: white;
+      border: 2px solid #ccc;
+      border-radius: 5px;
+      cursor: pointer;
+      text-align: center;
+      font-weight: bold;
+      transition: transform 0.2s;
+    }
+    .card:hover {
+      transform: scale(1.15);
+      background-color: #f1f3f5;
+    }
+    .card.green {
+      border-color: #28a745;
+      background-color: #d4edda;
+      cursor: not-allowed;
+    }
+    .card.red {
+      border-color: #dc3545;
+      background-color: #f8d7da;
+    }
+    .timer {
+      font-size: 1.3em;
+      font-weight: bold;
+      color: red;
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      padding: 5px 10px;
+      border-radius: 15px;
+    }
+    #start-button {
+      font-family: 'Prompt', Arial, sans-serif;
+      position: absolute;
+      top: 10px;
+      right: 80px;
+      font-size: 1em;
+      padding: 5px 10px;
+      background-color: white;
+      color: red;
+      border-radius: 15px;
+    }
+    #end-score {
+      font-size: 1.8em;
+      font-weight: bold;
+      color: #333;
+      display: none;
+    }
+    @media (max-width: 768px) {
+      .grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .column {
+        width: 100%;
+      }
+      #start-button {
+        right: 10px;
+      }
+    }
+    @media (max-width: 480px) {
+      .container {
+        width: 95%;
+      }
+    }
+  </style>
+  <!-- เพิ่ม SweetAlert2 CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+</head>
+<body>
+  <div class="container">
+    <h1>เกมส์จับคู่คำศัพท์</h1>
+    <button id="start-button">เริ่มเกมใหม่</button>
+    <div id="timer-container" class="timer">เวลา: 02:00</div>
+    <div id="end-score">คุณได้คะแนน: 0</div>
+    <div id="game-board" class="grid" style="display: none;">
+      <div class="column" id="left-column"></div>
+      <div class="column" id="right-column"></div>
+    </div>
+  </div>
+
+  <!-- เพิ่ม audio สำหรับเสียงพื้นหลัง -->
+  <audio id="background-music" loop>
+    <source src="https://js-nonsaad.github.io/pm2.5/roundandround.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+
+  <!-- เพิ่ม audio สำหรับเสียง effect เมื่อจับคู่ถูกต้อง -->
+  <audio id="correct-sound">
+    <source src="https://js-nonsaad.github.io/pm2.5/Correct.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+
+  <!-- เพิ่ม SweetAlert2 JS -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    // คำศัพท์สำหรับเด็ก
+    const elementsData = [
+  { "english": "Close", "thai": "Open" },
+  { "english": "Big", "thai": "Small" },
+  { "english": "Fast", "thai": "Slow" },
+  { "english": "Hot", "thai": "Cold" },
+  { "english": "Happy", "thai": "Sad" },
+  { "english": "Hard", "thai": "Soft" },
+  { "english": "High", "thai": "Low" },
+  { "english": "Heavy", "thai": "Light" },
+  { "english": "Thick", "thai": "Thin" },
+  { "english": "Right", "thai": "Wrong" },
+  { "english": "Strong", "thai": "Weak" },
+  { "english": "Clean", "thai": "Dirty" },
+  { "english": "Dark", "thai": "Bright" },
+  { "english": "Full", "thai": "Empty" },
+  { "english": "Old", "thai": "Young" },
+  { "english": "Near", "thai": "Far" },
+  { "english": "Up", "thai": "Down" },
+  { "english": "In", "thai": "Out" },
+  { "english": "Day", "thai": "Night" },
+  { "english": "Good", "thai": "Bad" },
+  { "english": "Rich", "thai": "Poor" },
+  { "english": "Safe", "thai": "Dangerous" },
+  { "english": "Soft", "thai": "Hard" },
+  { "english": "Easy", "thai": "Difficult" },
+  { "english": "Wide", "thai": "Narrow" },
+  { "english": "Tall", "thai": "Short" },
+  { "english": "Early", "thai": "Late" },
+  { "english": "Empty", "thai": "Full" },
+  { "english": "Warm", "thai": "Cool" },
+  { "english": "Thick", "thai": "Thin" },
+  { "english": "Loud", "thai": "Quiet" },
+  { "english": "Same", "thai": "Different" },
+  { "english": "Wet", "thai": "Dry" },
+  { "english": "Soft", "thai": "Rough" },
+  { "english": "Young", "thai": "Old" },
+  { "english": "Alive", "thai": "Dead" },
+  { "english": "Fat", "thai": "Thin" },
+  { "english": "Smooth", "thai": "Rough" },
+  { "english": "Cheap", "thai": "Expensive" },
+  { "english": "Strong", "thai": "Weak" },
+  { "english": "Polite", "thai": "Rude" },
+  { "english": "Empty", "thai": "Full" },
+  { "english": "Sharp", "thai": "Dull" },
+  { "english": "Beautiful", "thai": "Ugly" },
+  { "english": "Fast", "thai": "Slow" },
+  { "english": "Healthy", "thai": "Sick" },
+  { "english": "Friendly", "thai": "Unfriendly" },
+  { "english": "Tidy", "thai": "Messy" },
+  { "english": "Correct", "thai": "Incorrect" }
+  { "english": "Begin", "thai": "End" },
+  { "english": "Before", "thai": "After" },
+  { "english": "Strong", "thai": "Weak" },
+  { "english": "Brave", "thai": "Cowardly" },
+  { "english": "Inside", "thai": "Outside" },
+  { "english": "Open", "thai": "Shut" },
+  { "english": "Soft", "thai": "Hard" },
+  { "english": "Sweet", "thai": "Sour" },
+  { "english": "Fast", "thai": "Slow" },
+  { "english": "Fat", "thai": "Slim" },
+  { "english": "Deep", "thai": "Shallow" },
+  { "english": "Tight", "thai": "Loose" },
+  { "english": "Smooth", "thai": "Rough" },
+  { "english": "Interesting", "thai": "Boring" },
+  { "english": "Happy", "thai": "Unhappy" },
+  { "english": "Big", "thai": "Tiny" },
+  { "english": "Hardworking", "thai": "Lazy" },
+  { "english": "Early", "thai": "Late" },
+  { "english": "New", "thai": "Old" },
+  { "english": "Wide", "thai": "Narrow" },
+  { "english": "Warm", "thai": "Cool" },
+  { "english": "Short", "thai": "Long" },
+  { "english": "Neat", "thai": "Messy" },
+  { "english": "Rich", "thai": "Poor" },
+  { "english": "Far", "thai": "Near" },
+  { "english": "Thick", "thai": "Thin" },
+  { "english": "Loud", "thai": "Quiet" },
+  { "english": "Same", "thai": "Different" },
+  { "english": "Wet", "thai": "Dry" },
+  { "english": "Soft", "thai": "Rough" },
+  { "english": "Young", "thai": "Old" },
+  { "english": "Alive", "thai": "Dead" },
+  { "english": "Fat", "thai": "Thin" },
+  { "english": "Smooth", "thai": "Rough" },
+  { "english": "Cheap", "thai": "Expensive" },
+  { "english": "Strong", "thai": "Weak" },
+  { "english": "Polite", "thai": "Rude" },
+  { "english": "Empty", "thai": "Full" },
+  { "english": "Sharp", "thai": "Dull" },
+  { "english": "Beautiful", "thai": "Ugly" },
+  { "english": "Healthy", "thai": "Sick" },
+  { "english": "Friendly", "thai": "Unfriendly" },
+  { "english": "Tidy", "thai": "Messy" },
+  { "english": "Correct", "thai": "Incorrect" },
+  { "english": "Safe", "thai": "Unsafe" },
+  { "english": "Present", "thai": "Absent" },
+  { "english": "Smart", "thai": "Dumb" },
+  { "english": "Generous", "thai": "Greedy" },
+  { "english": "Comfortable", "thai": "Uncomfortable" },
+  { "english": "Kind", "thai": "Mean" }
+  { "english": "Increase", "thai": "Decrease" },
+  { "english": "Accept", "thai": "Reject" },
+  { "english": "Appear", "thai": "Disappear" },
+  { "english": "Arrive", "thai": "Depart" },
+  { "english": "Ask", "thai": "Answer" },
+  { "english": "Attack", "thai": "Defend" },
+  { "english": "Build", "thai": "Destroy" },
+  { "english": "Buy", "thai": "Sell" },
+  { "english": "Catch", "thai": "Miss" },
+  { "english": "Come", "thai": "Go" },
+  { "english": "Create", "thai": "Destroy" },
+  { "english": "Cry", "thai": "Laugh" },
+  { "english": "Enter", "thai": "Exit" },
+  { "english": "Find", "thai": "Lose" },
+  { "english": "Fix", "thai": "Break" },
+  { "english": "Float", "thai": "Sink" },
+  { "english": "Follow", "thai": "Lead" },
+  { "english": "Give", "thai": "Take" },
+  { "english": "Grow", "thai": "Shrink" },
+  { "english": "Hope", "thai": "Despair" },
+  { "english": "Import", "thai": "Export" },
+  { "english": "Increase", "thai": "Reduce" },
+  { "english": "Learn", "thai": "Forget" },
+  { "english": "Love", "thai": "Hate" },
+  { "english": "Marry", "thai": "Divorce" },
+  { "english": "Open", "thai": "Close" },
+  { "english": "Pass", "thai": "Fail" },
+  { "english": "Push", "thai": "Pull" },
+  { "english": "Raise", "thai": "Lower" },
+  { "english": "Remember", "thai": "Forget" },
+  { "english": "Save", "thai": "Spend" },
+  { "english": "Shout", "thai": "Whisper" },
+  { "english": "Show", "thai": "Hide" },
+  { "english": "Sit", "thai": "Stand" },
+  { "english": "Smile", "thai": "Frown" },
+  { "english": "Start", "thai": "Stop" },
+  { "english": "Strengthen", "thai": "Weaken" },
+  { "english": "Teach", "thai": "Learn" },
+  { "english": "Throw", "thai": "Catch" },
+  { "english": "Wake", "thai": "Sleep" },
+  { "english": "Win", "thai": "Lose" },
+  { "english": "Work", "thai": "Rest" },
+  { "english": "Beautiful", "thai": "Ugly" },
+  { "english": "Bitter", "thai": "Sweet" },
+  { "english": "Cheap", "thai": "Costly" },
+  { "english": "Clear", "thai": "Cloudy" },
+  { "english": "Easy", "thai": "Hard" },
+  { "english": "Empty", "thai": "Occupied" },
+  { "english": "Major", "thai": "Minor" },
+  { "english": "Public", "thai": "Private" }
+  { "english": "Accept", "thai": "Decline" },
+  { "english": "Active", "thai": "Lazy" },
+  { "english": "Advantage", "thai": "Disadvantage" },
+  { "english": "Alive", "thai": "Dead" },
+  { "english": "Allow", "thai": "Forbid" },
+  { "english": "Always", "thai": "Never" },
+  { "english": "Artificial", "thai": "Natural" },
+  { "english": "Ascend", "thai": "Descend" },
+  { "english": "Begin", "thai": "Finish" },
+  { "english": "Bend", "thai": "Straighten" },
+  { "english": "Better", "thai": "Worse" },
+  { "english": "Borrow", "thai": "Lend" },
+  { "english": "Brave", "thai": "Fearful" },
+  { "english": "Bright", "thai": "Dull" },
+  { "english": "Busy", "thai": "Idle" },
+  { "english": "Careful", "thai": "Careless" },
+  { "english": "Certain", "thai": "Uncertain" },
+  { "english": "Cheap", "thai": "Expensive" },
+  { "english": "Clean", "thai": "Messy" },
+  { "english": "Close", "thai": "Distant" },
+  { "english": "Cool", "thai": "Warm" },
+  { "english": "Courageous", "thai": "Cowardly" },
+  { "english": "Create", "thai": "Destroy" },
+  { "english": "Crisp", "thai": "Soggy" },
+  { "english": "Dangerous", "thai": "Safe" },
+  { "english": "Deep", "thai": "Shallow" },
+  { "english": "Demand", "thai": "Supply" },
+  { "english": "Difficult", "thai": "Simple" },
+  { "english": "Dim", "thai": "Bright" },
+  { "english": "Divide", "thai": "Unite" },
+  { "english": "Domestic", "thai": "Foreign" },
+  { "english": "Down", "thai": "Up" },
+  { "english": "Dry", "thai": "Moist" },
+  { "english": "Encourage", "thai": "Discourage" },
+  { "english": "Enter", "thai": "Leave" },
+  { "english": "Equal", "thai": "Unequal" },
+  { "english": "Expand", "thai": "Shrink" },
+  { "english": "Famous", "thai": "Unknown" },
+  { "english": "Fat", "thai": "Skinny" },
+  { "english": "Fear", "thai": "Bravery" },
+  { "english": "Float", "thai": "Sink" },
+  { "english": "Gentle", "thai": "Harsh" },
+  { "english": "Heavy", "thai": "Light" },
+  { "english": "Hide", "thai": "Reveal" },
+  { "english": "Hopeful", "thai": "Hopeless" },
+  { "english": "Huge", "thai": "Tiny" },
+  { "english": "Ignore", "thai": "Notice" },
+  { "english": "Improve", "thai": "Worsen" },
+  { "english": "Include", "thai": "Exclude" }
+
+
+
+    ];
+
+    const pairCount = 5;
+    let selectedLeft = null;
+    let selectedRight = null;
+    let remainingPairs = [];
+    let score = 0;
+    let timer = 120;
+    let countdownInterval;
+
+    const startButton = document.getElementById("start-button");
+    const gameBoard = document.getElementById("game-board");
+    const leftColumn = document.getElementById("left-column");
+    const rightColumn = document.getElementById("right-column");
+    const timerContainer = document.getElementById("timer-container");
+    const endScore = document.getElementById("end-score");
+
+    const backgroundMusic = document.getElementById("background-music");
+    const correctSound = document.getElementById("correct-sound");
+
+    const shuffle = (array) => array.sort(() => Math.random() - 0.5);
+
+    const getRandomPairs = () => shuffle(elementsData).slice(0, pairCount);
+
+    const updateTimer = () => {
+      timerContainer.textContent = `เวลา: ${Math.floor(timer / 60)}:${(timer % 60).toString().padStart(2, '0')}`;
+    };
+
+    const loadNewRound = () => {
+      leftColumn.innerHTML = "";
+      rightColumn.innerHTML = "";
+      remainingPairs = getRandomPairs();
+
+      shuffle(remainingPairs).forEach((element) => {
+        leftColumn.appendChild(createCard(element.english, true));
+      });
+
+      shuffle(remainingPairs).forEach((element) => {
+        rightColumn.appendChild(createCard(element.thai, false));
+      });
+
+      selectedLeft = null;
+      selectedRight = null;
+    };
+
+    const createCard = (content, isLeft) => {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.textContent = content;
+      card.dataset.content = content;
+      card.addEventListener("click", () => handleCardClick(card, isLeft));
+      return card;
+    };
+
+    const handleCardClick = (card, isLeft) => {
+      if (card.classList.contains("green")) return;
+
+      if (isLeft) {
+        if (selectedLeft) selectedLeft.classList.remove("selected");
+        selectedLeft = card;
+      } else {
+        if (selectedRight) selectedRight.classList.remove("selected");
+        selectedRight = card;
+      }
+
+      card.style.transform = "scale(1.1)";
+      setTimeout(() => (card.style.transform = "scale(1)"), 200);
+
+      if (selectedLeft && selectedRight) {
+        checkMatch();
+      }
+    };
+
+    const checkMatch = () => {
+      const leftEnglish = selectedLeft.dataset.content;
+      const rightThai = selectedRight.dataset.content;
+
+      const matchedPair = remainingPairs.find(pair => pair.english === leftEnglish && pair.thai === rightThai);
+
+      if (matchedPair) {
+        selectedLeft.classList.add("green");
+        selectedRight.classList.add("green");
+
+        remainingPairs = remainingPairs.filter(pair => pair !== matchedPair);
+        score++;
+
+        // เล่นเสียง effect เมื่อจับคู่ถูกต้อง
+        correctSound.play();
+
+        if (remainingPairs.length === 0) {
+          setTimeout(() => {
+            loadNewRound();
+          }, 1000);
+        }
+
+        selectedLeft = null;
+        selectedRight = null;
+      } else {
+        selectedLeft.classList.add("red");
+        selectedRight.classList.add("red");
+
+        setTimeout(() => {
+          selectedLeft.classList.remove("red");
+          selectedRight.classList.remove("red");
+          selectedLeft = null;
+          selectedRight = null;
+        }, 500);
+      }
+    };
+
+    const startGame = () => {
+      score = 0;
+      timer = 120;
+      updateTimer();
+      clearInterval(countdownInterval);
+      endScore.style.display = "none";
+
+      // เริ่มเล่นเสียงพื้นหลัง
+      backgroundMusic.play();
+
+      loadNewRound();
+      gameBoard.style.display = "flex";
+
+      countdownInterval = setInterval(() => {
+        timer--;
+        updateTimer();
+
+        if (timer <= 0) {
+          clearInterval(countdownInterval);
+          gameBoard.style.display = "none";
+          endScore.style.display = "block";
+
+
+
+          // แสดงผลคะแนนด้วย Sweetalert2
+          Swal.fire({
+            title: 'เกมจบแล้ว!',
+            text: `คุณได้คะแนน: ${score}`,
+            icon: 'success',
+            confirmButtonText: 'ตกลง'
+          });
+        }
+      }, 1000);
+    };
+
+    startButton.addEventListener("click", startGame);
+  </script>
+</body>
+</html>
